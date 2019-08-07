@@ -1,0 +1,74 @@
+version: 2
+
+jobs:
+  test:
+    docker:
+      - image: circleci/ruby:2.5.3-node-browsers
+        environment:
+          BUNDLE_JOBS: 3
+          BUNDLE_RETRY: 3
+          BUNDLE_PATH: vendor/bundle
+
+    steps:
+      - checkout
+
+      # Download CodeClimate reporter
+      - run:
+          name:  Download cc-test-reporter
+          command: |
+            mkdir -p tmp/
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./tmp/cc-test-reporter
+            chmod +x ./tmp/cc-test-reporter
+      - persist_to_workspace:
+          root: tmp
+          paths:
+            - cc-test-reporter
+
+      - attach_workspace:
+          at: ~/repo/tmp
+
+      # Restore bundle cache
+      - restore_cache:
+          keys:
+            - skylab-genesis-client-ruby-bundle-v2-{{ checksum "Gemfile.lock" }}
+            - skylab-genesis-client-ruby-bundle-v2-
+
+      - run:
+          name: Install bundler gem
+          command: |
+            gem install bundler
+      - run:
+          name: Install application dependencies
+          command: |
+            bundle install --jobs=4 --retry=3 --path vendor/bundle
+      - save_cache:
+          paths:
+            - ./vendor/bundle
+          key: skylab-genesis-client-ruby-bundle-v2-{{ checksum "Gemfile.lock" }}
+
+      # Lint
+      - run:
+          name: Lint
+          command: bundle exec rubocop
+
+      # Unit tests
+      - run:
+          name: Run unit tests
+          command: |
+            mkdir /tmp/test-results
+            TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
+            bundle exec rspec $TEST_FILES
+            ./tmp/cc-test-reporter format-coverage -t simplecov -o tmp/codeclimate.unit.json coverage/.resultset.json
+      # Upload results to CodeClimate
+      - attach_workspace:
+          at: ~/repo/tmp
+      - run:
+          name: Upload coverage results to Code Climate
+          command: |
+            ./tmp/cc-test-reporter upload-coverage -i tmp/codeclimate.unit.json
+workflows:
+  version: 2
+
+  test:
+    jobs:
+      - test
