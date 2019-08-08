@@ -15,7 +15,6 @@ module Supercast
     attr_reader :http_headers
     attr_reader :http_status
     attr_reader :json_body # equivalent to #data
-    attr_reader :request_id
 
     # Initializes a SupercastError.
     def initialize(message = nil, http_status: nil, http_body: nil, json_body: nil, http_headers: nil, code: nil)
@@ -25,13 +24,11 @@ module Supercast
       @http_headers = http_headers || {}
       @json_body = json_body
       @code = code
-      @request_id = @http_headers[:request_id]
     end
 
     def to_s
       status_string = @http_status.nil? ? '' : "(Status #{@http_status}) "
-      id_string = @request_id.nil? ? '' : "(Request #{@request_id}) "
-      "#{status_string}#{id_string}#{@message}"
+      "#{status_string}#{@message}"
     end
   end
 
@@ -79,7 +76,7 @@ module Supercast
 
   module OAuth
     # OAuthError is raised when the OAuth API returns an error.
-    class OAuthError < StripeError
+    class OAuthError < SupercastError
       def initialize(code, description, http_status: nil, http_body: nil, json_body: nil, http_headers: nil)
         super(description, http_status: http_status, http_body: http_body,
                            json_body: json_body, http_headers: http_headers,

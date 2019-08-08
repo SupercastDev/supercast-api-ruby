@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Supercast
-  class DataList < SupercastObject
+  class DataList < DataObject
     include Enumerable
     include Supercast::Operations::List
     include Supercast::Operations::Request

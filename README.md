@@ -82,7 +82,7 @@ episode, resp = client.request do
     "1",
   )
 end
-puts resp.request_id
+puts resp.data
 ```
 
 ### Configuring a proxy

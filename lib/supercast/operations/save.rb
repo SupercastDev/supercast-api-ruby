@@ -19,8 +19,8 @@ module Supercast
             raise ArgumentError, "Cannot update protected field: #{k}" if protected_fields.include?(k)
           end
 
-          resp, opts = request(:post, "#{resource_url}/#{id}", params, opts)
-          Util.convert_to_stripe_object(resp.data, opts)
+          resp, opts = request(:patch, "#{resource_url}/#{id}", params, opts)
+          Util.convert_to_supercast_object(resp.data, opts)
         end
       end
 
@@ -46,11 +46,14 @@ module Supercast
 
         values = serialize_params(self).merge(params)
 
+        # Update vs create a new resource
+        verb = self[:id].nil? ? :post : :patch
+
         # note that id gets removed here our call to #url above has already
         # generated a uri for this object with an identifier baked in
         values.delete(:id)
 
-        resp, opts = request(:post, save_url, values, opts)
+        resp, opts = request(verb, save_url, Hash[object_name => values], opts)
         initialize_from(resp.data, opts)
       end
 
@@ -64,7 +67,7 @@ module Supercast
         # This switch essentially allows us "upsert"-like functionality. If the
         # API resource doesn't have an ID set (suggesting that it's new) and
         # its class responds to .create (which comes from
-        # Supercast::APIOperations::Create), then use the URL to create a new
+        # Supercast::Operations::Create), then use the URL to create a new
         # resource. Otherwise, generate a URL based on the object's identifier
         # for a normal update.
         if self[:id].nil? && self.class.respond_to?(:create)

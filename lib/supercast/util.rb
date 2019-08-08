@@ -9,7 +9,7 @@ module Supercast
       :api_key,
     ].freeze
 
-    # Options that should be copyable from one SupercastObject to another
+    # Options that should be copyable from one DataObject to another
     # including options that may be internal.
     OPTS_COPYABLE = (
       OPTS_USER_SPECIFIED + Set[:api_base]
@@ -23,7 +23,7 @@ module Supercast
 
     def self.objects_to_ids(obj)
       case obj
-      when APIResource
+      when Resource
         obj.id
       when Hash
         res = {}
@@ -37,20 +37,20 @@ module Supercast
     end
 
     def self.object_classes
-      @object_classes ||= Supercast::ObjectTypes.object_names_to_classes
+      @object_classes ||= Supercast::DataTypes.object_names_to_classes
     end
 
-    # Converts a hash of fields or an array of hashes into a +SupercastObject+ or
-    # array of +SupercastObject+s. These new objects will be created as a concrete
+    # Converts a hash of fields or an array of hashes into a +DataObject+ or
+    # array of +DataObject+s. These new objects will be created as a concrete
     # type as dictated by their `object` field (e.g. an `object` value of
     # `charge` would create an instance of +Charge+), but if `object` is not
     # present or of an unknown type, the newly created instance will fall back
-    # to being a +SupercastObject+.
+    # to being a +DataObject+.
     #
     # ==== Attributes
     #
-    # * +data+ - Hash of fields and values to be converted into a SupercastObject.
-    # * +opts+ - Options for +SupercastObject+ like an API key that will be reused
+    # * +data+ - Hash of fields and values to be converted into a DataObject.
+    # * +opts+ - Options for +DataObject+ like an API key that will be reused
     #   on subsequent API calls.
     def self.convert_to_supercast_object(data, opts = {})
       opts = normalize_opts(opts)
@@ -60,8 +60,8 @@ module Supercast
         data.map { |i| convert_to_supercast_object(i, opts) }
       when Hash
         # Try converting to a known object class. If none available, fall back
-        # to generic SupercastObject
-        object_classes.fetch(data[:object], SupercastObject)
+        # to generic DataObject
+        object_classes.fetch(data[:object], DataObject)
                       .construct_from(data, opts)
       else
         data

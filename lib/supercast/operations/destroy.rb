@@ -16,7 +16,7 @@ module Supercast
         #   object values) to be added to the request.
         def destroy(id, params = {}, opts = {})
           resp, opts = request(:delete, "#{resource_url}/#{id}", params, opts)
-          Util.convert_to_stripe_object(resp.data, opts)
+          Util.convert_to_supercast_object(resp.data, opts)
         end
       end
 

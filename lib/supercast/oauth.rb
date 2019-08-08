@@ -3,11 +3,11 @@
 module Supercast
   module OAuth
     module OAuthOperations
-      extend APIOperations::Request::ClassMethods
+      extend Operations::Request::ClassMethods
 
       def self.request(method, url, params, opts)
         opts = Util.normalize_opts(opts)
-        opts[:client] ||= SupercastClient.active_client
+        opts[:client] ||= Client.active_client
         opts[:api_base] ||= Supercast.connect_base
 
         super(method, url, params, opts)
@@ -44,7 +44,7 @@ module Supercast
       resp, opts = OAuthOperations.request(
         :post, '/oauth/token', params, opts
       )
-      # This is just going to return a generic SupercastObject, but that's okay
+      # This is just going to return a generic DataObject, but that's okay
       Util.convert_to_supercast_object(resp.data, opts)
     end
 
@@ -54,7 +54,7 @@ module Supercast
       resp, opts = OAuthOperations.request(
         :post, '/oauth/deauthorize', params, opts
       )
-      # This is just going to return a generic SupercastObject, but that's okay
+      # This is just going to return a generic DataObject, but that's okay
       Util.convert_to_supercast_object(resp.data, opts)
     end
   end

@@ -125,8 +125,9 @@ module Supercast
       end
     end
 
-    def execute_request(method, path, api_base: nil, api_key: nil, headers: {}, params: {}) # rubocop:disable Metrics/AbcSize Metrics/MethodLength
+    def execute_request(method, path, api_base: nil, api_version: nil, api_key: nil, headers: {}, params: {}) # rubocop:disable Metrics/AbcSize Metrics/MethodLength
       api_base ||= Supercast.api_base
+      api_version ||= Supercast.api_version
       api_key ||= Supercast.api_key
       params = Util.objects_to_ids(params)
 
@@ -161,7 +162,7 @@ module Supercast
       headers = request_headers(api_key, method)
                 .update(Util.normalize_headers(headers))
       params_encoder = FaradaySupercastEncoder.new
-      url = api_url(path, api_base)
+      url = api_url(path, api_base, api_version)
 
       # stores information on the request we're about to make so that we don't
       # have to pass as many parameters around for logging.
@@ -234,8 +235,8 @@ module Supercast
 
     private
 
-    def api_url(url = '', api_base = nil)
-      (api_base || Supercast.api_base) + url
+    def api_url(url = '', api_base = nil, api_version = nil)
+      "#{api_base || Supercast.api_base}/#{api_version}#{url}"
     end
 
     def check_api_key!(api_key)
@@ -310,17 +311,6 @@ module Supercast
                    http_status: status, http_body: body)
     end
 
-    # Formats a plugin "app info" hash into a string that we can tack onto the
-    # end of a User-Agent string where it'll be fairly prominent in places like
-    # the Dashboard. Note that this formatting has been implemented to match
-    # other libraries, and shouldn't be changed without universal consensus.
-    def format_app_info(info)
-      str = info[:name]
-      str = "#{str}/#{info[:version]}" unless info[:version].nil?
-      str = "#{str} (#{info[:url]})" unless info[:url].nil?
-      str
-    end
-
     def handle_error_response(http_resp, context)
       begin
         resp = Response.from_faraday_hash(http_resp)
@@ -348,8 +338,7 @@ module Supercast
                      error_message: error_data[:message],
                      error_param: error_data[:param],
                      error_type: error_data[:type],
-                     idempotency_key: context.idempotency_key,
-                     request_id: context.request_id)
+                     idempotency_key: context.idempotency_key)
 
       # The standard set of arguments that can be used to initialize most of
       # the exceptions.
@@ -387,8 +376,7 @@ module Supercast
                      status: resp.http_status,
                      error_code: error_code,
                      error_description: description,
-                     idempotency_key: context.idempotency_key,
-                     request_id: context.request_id)
+                     idempotency_key: context.idempotency_key)
 
       args = [error_code, description, {
         http_status: resp.http_status, http_body: resp.http_body,
@@ -419,8 +407,7 @@ module Supercast
                              api_base = nil)
       Util.log_error('Supercast network error',
                      error_message: error.message,
-                     idempotency_key: context.idempotency_key,
-                     request_id: context.request_id)
+                     idempotency_key: context.idempotency_key)
 
       case error
       when Faraday::ConnectionFailed
@@ -456,11 +443,8 @@ module Supercast
     end
 
     def request_headers(api_key, method)
-      user_agent = "Supercast/v1 RubyBindings/#{Supercast::VERSION}"
-      user_agent += ' ' + format_app_info(Supercast.app_info) unless Supercast.app_info.nil?
-
       headers = {
-        'User-Agent' => user_agent,
+        'User-Agent' => "Supercast RubyBindings/#{Supercast::VERSION}",
         'Authorization' => "Bearer #{api_key}",
         'Content-Type' => 'application/x-www-form-urlencoded'
       }
@@ -470,7 +454,6 @@ module Supercast
       headers['Idempotency-Key'] ||= SecureRandom.uuid if %i[post delete].include?(method) && Supercast.max_network_retries.positive?
 
       headers['Supercast-Version'] = Supercast.api_version if Supercast.api_version
-      headers['Supercast-Account'] = Supercast.supercast_account if Supercast.supercast_account
 
       user_agent = @system_profiler.user_agent
       begin
@@ -509,20 +492,10 @@ module Supercast
                     idempotency_key: context.idempotency_key,
                     method: context.method,
                     path: context.path,
-                    request_id: context.request_id,
                     status: status)
       Util.log_debug('Response details',
                      body: body,
-                     idempotency_key: context.idempotency_key,
-                     request_id: context.request_id)
-
-      return unless context.request_id
-
-      Util.log_debug('Dashboard link for request',
-                     idempotency_key: context.idempotency_key,
-                     request_id: context.request_id,
-                     url: Util.request_id_dashboard_url(context.request_id,
-                                                        context.api_key))
+                     idempotency_key: context.idempotency_key)
     end
 
     def log_response_error(context, request_start, error)
@@ -546,7 +519,6 @@ module Supercast
       attr_accessor :method
       attr_accessor :path
       attr_accessor :query_params
-      attr_accessor :request_id
 
       # The idea with this method is that we might want to update some of
       # context information because a response that we've received from the API
@@ -570,7 +542,6 @@ module Supercast
         context.account = headers['Supercast-Account']
         context.api_version = headers['Supercast-Version']
         context.idempotency_key = headers['Idempotency-Key']
-        context.request_id = headers['Request-Id']
         context
       end
     end
@@ -619,7 +590,6 @@ module Supercast
                        "(#{RUBY_RELEASE_DATE})"
 
         {
-          application: Supercast.app_info,
           bindings_version: Supercast::VERSION,
           lang: 'ruby',
           lang_version: lang_version,

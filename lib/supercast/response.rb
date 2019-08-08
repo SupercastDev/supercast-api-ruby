@@ -17,9 +17,6 @@ module Supercast
     # The integer HTTP status code of the response.
     attr_accessor :http_status
 
-    # The Supercast request ID of the response.
-    attr_accessor :request_id
-
     # Initializes a Response object from a Hash like the kind returned as
     # part of a Faraday exception.
     #
@@ -30,7 +27,6 @@ module Supercast
       resp.http_body = http_resp[:body]
       resp.http_headers = http_resp[:headers]
       resp.http_status = http_resp[:status]
-      resp.request_id = http_resp[:headers]['Request-Id']
       resp
     end
 
@@ -43,7 +39,6 @@ module Supercast
       resp.http_body = http_resp.body
       resp.http_headers = http_resp.headers
       resp.http_status = http_resp.status
-      resp.request_id = http_resp.headers['Request-Id']
       resp
     end
   end

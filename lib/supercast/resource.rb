@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
 module Supercast
-  class Resource < SupercastObject
-    include Supercast::APIOperations::Request
+  class Resource < DataObject
+    include Supercast::Operations::Request
 
     def self.class_name
       name.split('::')[-1]
     end
 
     def self.resource_url
-      if self == APIResource
+      if self == Resource
         raise NotImplementedError,
-              'APIResource is an abstract class. You should perform actions ' \
+              'Resource is an abstract class. You should perform actions ' \
               'on its subclasses (Charge, Customer, etc.)'
       end
 
       # Namespaces are separated in object names with periods (.) and in URLs
       # with forward slashes (/), so replace the former with the latter.
-      "/v1/#{self::OBJECT_NAME.downcase.tr('.', '/')}s"
+      "/#{self::OBJECT_NAME.downcase.tr('.', '/')}s"
     end
 
     # Adds a custom method to a resource class. This is used to add support for
@@ -30,12 +30,12 @@ module Supercast
     # For example, this call:
     #     custom_method :suspend, http_verb: post
     # adds a `suspend` class method to the resource class that, when called,
-    # will send a POST request to `/v1/<object_name>/suspend`.
+    # will send a POST request to `/<object_name>/suspend`.
     def self.custom_method(name, http_verb:, http_path: nil)
-      unless %i[get post delete].include?(http_verb)
+      unless %i[get patch post delete].include?(http_verb)
         raise ArgumentError,
               "Invalid http_verb value: #{http_verb.inspect}. Should be one " \
-              'of :get, :post or :delete.'
+              'of :get, :patch, :post or :delete.'
       end
       http_path ||= name.to_s
       define_singleton_method(name) do |id, params = {}, opts = {}|
@@ -58,7 +58,11 @@ module Supercast
           'id'
         )
       end
-      "#{self.class.resource_url}/#{CGI.escape(id)}"
+      "#{self.class.resource_url}/#{CGI.escape(id.to_s)}"
+    end
+
+    def object_name
+      self.class::OBJECT_NAME
     end
 
     def refresh

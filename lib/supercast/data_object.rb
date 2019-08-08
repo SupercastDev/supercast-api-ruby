@@ -120,18 +120,6 @@ module Supercast
         JSON.pretty_generate(@values)
     end
 
-    # Re-initializes the object based on a hash of values (usually one that's
-    # come back from an API call). Adds or removes value accessors as necessary
-    # and updates the state of internal data.
-    #
-    # Please don't use this method. If you're trying to do mass assignment, try
-    # #initialize_from instead.
-    def refresh_from(values, opts, partial = false)
-      initialize_from(values, opts, partial)
-    end
-    extend Gem::Deprecate
-    deprecate :refresh_from, '#update_attributes', 2016, 1
-
     # Mass assigns attributes on the model.
     #
     # This is a version of +update_attributes+ that takes some extra options
@@ -152,7 +140,7 @@ module Supercast
     def update_attributes(values, opts = {}, dirty: true)
       values.each do |k, v|
         add_accessors([k], values) unless metaclass.method_defined?(k.to_sym)
-        @values[k] = Util.convert_to_stripe_object(v, opts)
+        @values[k] = Util.convert_to_supercast_object(v, opts)
         dirty_value!(@values[k]) if dirty
         @unsaved_values.add(k)
       end
@@ -335,7 +323,7 @@ module Supercast
                 'We interpret empty strings as nil in requests. ' \
                 "You may set (object).#{k} = nil to delete the property."
             end
-            @values[k] = Util.convert_to_stripe_object(v, @opts)
+            @values[k] = Util.convert_to_supercast_object(v, @opts)
             dirty_value!(@values[k])
             @unsaved_values.add(k)
           end
@@ -463,7 +451,7 @@ module Supercast
       # We throw an error if a property was set explicitly but we can't do
       # anything with it because the integration is probably not working as the
       # user intended it to.
-      elsif value.is_a?(APIResource) && !value.save_with_parent
+      elsif value.is_a?(Resource) && !value.save_with_parent
         if !unsaved
           nil
         elsif value.respond_to?(:id) && !value.id.nil?
@@ -491,7 +479,7 @@ module Supercast
       # example by appending a new hash onto `additional_owners` for an
       # account.
       elsif value.is_a?(Hash)
-        Util.convert_to_stripe_object(value, @opts).serialize_params
+        Util.convert_to_supercast_object(value, @opts).serialize_params
 
       elsif value.is_a?(DataObject)
         update = value.serialize_params(force: force)

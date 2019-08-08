@@ -8,7 +8,7 @@ module Supercast
           warn_on_opts_in_params(params)
 
           opts = Util.normalize_opts(opts)
-          opts[:client] ||= SupercastClient.active_client
+          opts[:client] ||= Client.active_client
 
           headers = opts.clone
           api_key = headers.delete(:api_key)
