@@ -3,6 +3,13 @@
 module Supercast
   module Operations
     module List
+      # Lists an API resource
+      #
+      # ==== Attributes
+      #
+      # * +filters+ - A hash of filters to pass to the API
+      # * +opts+ - A Hash of additional options (separate from the params /
+      #   object values) to be added to the request.
       def list(filters = {}, opts = {})
         opts = Util.normalize_opts(opts)
 
@@ -19,12 +26,6 @@ module Supercast
 
         obj
       end
-
-      # The original version of #list was given the somewhat unfortunate name of
-      # #all, and this alias allows us to maintain backward compatibility (the
-      # choice was somewhat misleading in the way that it only returned a single
-      # page rather than all objects).
-      alias all list
     end
   end
 end

@@ -9,19 +9,17 @@ module Supercast
               'perform actions on its subclasses (Balance, etc.)'
       end
 
-      # Namespaces are separated in object names with periods (.) and in URLs
-      # with forward slashes (/), so replace the former with the latter.
-      "/#{self::OBJECT_NAME.downcase.tr('.', '/')}"
-    end
-
-    def resource_url
-      self.class.resource_url
+      "/#{self::OBJECT_NAME.downcase}"
     end
 
     def self.retrieve(opts = {})
       instance = new(nil, Util.normalize_opts(opts))
       instance.refresh
       instance
+    end
+
+    def resource_url
+      self.class.resource_url
     end
   end
 end

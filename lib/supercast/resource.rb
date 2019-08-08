@@ -12,12 +12,14 @@ module Supercast
       if self == Resource
         raise NotImplementedError,
               'Resource is an abstract class. You should perform actions ' \
-              'on its subclasses (Charge, Customer, etc.)'
+              'on its subclasses (Episode, Creator, etc.)'
       end
 
-      # Namespaces are separated in object names with periods (.) and in URLs
-      # with forward slashes (/), so replace the former with the latter.
-      "/#{self::OBJECT_NAME.downcase.tr('.', '/')}s"
+      "/#{self::OBJECT_NAME.downcase}s"
+    end
+
+    def self.object_name
+      self::OBJECT_NAME
     end
 
     # Adds a custom method to a resource class. This is used to add support for
@@ -37,17 +39,21 @@ module Supercast
               "Invalid http_verb value: #{http_verb.inspect}. Should be one " \
               'of :get, :patch, :post or :delete.'
       end
-      http_path ||= name.to_s
-      define_singleton_method(name) do |id, params = {}, opts = {}|
-        unless id.is_a?(String)
-          raise ArgumentError,
-                'id should be a string representing the ID of an API resource'
-        end
 
-        url = "#{resource_url}/#{CGI.escape(id)}/#{CGI.escape(http_path)}"
+      http_path ||= name.to_s
+
+      define_singleton_method(name) do |id, params = {}, opts = {}|
+        url = "#{resource_url}/#{CGI.escape(id.to_s)}/#{CGI.escape(http_path)}"
         resp, opts = request(http_verb, url, params, opts)
         Util.convert_to_supercast_object(resp.data, opts)
       end
+    end
+
+    def self.retrieve(id, opts = {})
+      opts = Util.normalize_opts(opts)
+      instance = new(id, opts)
+      instance.refresh
+      instance
     end
 
     def resource_url
@@ -68,13 +74,6 @@ module Supercast
     def refresh
       resp, opts = request(:get, resource_url, @retrieve_params)
       initialize_from(resp.data, opts)
-    end
-
-    def self.retrieve(id, opts = {})
-      opts = Util.normalize_opts(opts)
-      instance = new(id, opts)
-      instance.refresh
-      instance
     end
   end
 end

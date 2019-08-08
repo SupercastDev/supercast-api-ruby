@@ -4,6 +4,16 @@ module Supercast
   module Operations
     module Request
       module ClassMethods
+        # Invokes an HTTP request via the Supercast Client for
+        # manipulating an API resource.
+        #
+        # ==== Attributes
+        #
+        # * +method+ - A symbol for the HTTP verb to use in the request
+        # * +url+ - A string which dictates what API endpoint URL to hit
+        # * +params+ - A hash of parameters to pass to the API
+        # * +opts+ - A Hash of additional options (separate from the params /
+        #   object values) to be added to the request.
         def request(method, url, params = {}, opts = {})
           warn_on_opts_in_params(params)
 

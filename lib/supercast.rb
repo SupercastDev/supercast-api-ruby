@@ -45,6 +45,8 @@ module Supercast
   @api_base = 'https://supercast.com/api'
   @api_version = 'v1'
 
+  @oauth_base = 'https://supercast.com'
+
   @log_level = nil
   @logger = nil
 
@@ -62,7 +64,7 @@ module Supercast
   @read_timeout = 80
 
   class << self
-    attr_accessor :api_key, :api_base, :verify_ssl_certs,
+    attr_accessor :api_key, :api_base, :verify_ssl_certs, :oauth_base,
                   :api_version, :open_timeout, :read_timeout, :proxy
 
     attr_reader :max_network_retry_delay, :initial_network_retry_delay

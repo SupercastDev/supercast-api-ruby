@@ -15,14 +15,23 @@ module Supercast
         # * +opts+ - A Hash of additional options (separate from the params /
         #   object values) to be added to the request.
         def destroy(id, params = {}, opts = {})
-          resp, opts = request(:delete, "#{resource_url}/#{id}", params, opts)
-          Util.convert_to_supercast_object(resp.data, opts)
+          request(:delete, "#{resource_url}/#{id}", params, opts)
+          true
         end
       end
 
+      # Deletes an API resource instance
+      #
+      # Deletes the instance resource with the passed in parameters.
+      #
+      # ==== Attributes
+      #
+      # * +params+ - A hash of parameters to pass to the API
+      # * +opts+ - A Hash of additional options (separate from the params /
+      #   object values) to be added to the request.
       def destroy(params = {}, opts = {})
-        resp, opts = request(:delete, resource_url, params, opts)
-        initialize_from(resp.data, opts)
+        request(:delete, resource_url, params, opts)
+        true
       end
 
       def self.included(base)

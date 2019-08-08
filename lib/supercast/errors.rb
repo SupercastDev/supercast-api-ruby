@@ -73,45 +73,4 @@ module Supercast
   # back off on request rate.
   class RateLimitError < SupercastError
   end
-
-  module OAuth
-    # OAuthError is raised when the OAuth API returns an error.
-    class OAuthError < SupercastError
-      def initialize(code, description, http_status: nil, http_body: nil, json_body: nil, http_headers: nil)
-        super(description, http_status: http_status, http_body: http_body,
-                           json_body: json_body, http_headers: http_headers,
-                           code: code)
-      end
-    end
-
-    # InvalidClientError is raised when the client doesn't belong to you or it
-    # doesn't exist or isn't connected to your application.
-    class InvalidClientError < OAuthError
-    end
-
-    # InvalidGrantError is raised when a specified code doesn't exist, is
-    # expired, has been used, or doesn't belong to you; a refresh token doesn't
-    # exist, or doesn't belong to you.
-    class InvalidGrantError < OAuthError
-    end
-
-    # InvalidRequestError is raised when a code, refresh token, or grant type
-    # parameter is not provided, but was required.
-    class InvalidRequestError < OAuthError
-    end
-
-    # InvalidScopeError is raised when an invalid scope parameter is provided.
-    class InvalidScopeError < OAuthError
-    end
-
-    # UnsupportedGrantTypeError is raised when an unuspported grant type
-    # parameter is specified.
-    class UnsupportedGrantTypeError < OAuthError
-    end
-
-    # UnsupportedResponseTypeError is raised when an unsupported response type
-    # parameter is specified.
-    class UnsupportedResponseTypeError < OAuthError
-    end
-  end
 end

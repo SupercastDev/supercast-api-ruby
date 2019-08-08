@@ -34,9 +34,12 @@ module Supercast
     #
     # This may throw JSON::ParserError if the response body is not valid JSON.
     def self.from_faraday_response(http_resp)
+      # handle no content responses
+      body = http_resp.body.empty? ? '{}' : http_resp.body
+
       resp = Response.new
-      resp.data = JSON.parse(http_resp.body, symbolize_names: true)
-      resp.http_body = http_resp.body
+      resp.data = JSON.parse(body, symbolize_names: true)
+      resp.http_body = body
       resp.http_headers = http_resp.headers
       resp.http_status = http_resp.status
       resp

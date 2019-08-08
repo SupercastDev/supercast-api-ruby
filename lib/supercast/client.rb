@@ -55,6 +55,7 @@ module Supercast
 
           unless @verify_ssl_warned
             @verify_ssl_warned = true
+
             warn('WARNING: Running without SSL cert verification. ' \
               'You should never do this in production. ' \
               'Execute `Supercast.verify_ssl_certs = true` to enable ' \
@@ -110,7 +111,7 @@ module Supercast
     # Executes the API call within the given block. Usage looks like:
     #
     #     client = Client.new
-    #     charge, resp = client.request { Charge.create }
+    #     charge, resp = client.request { Episode.create }
     #
     def request
       @last_response = nil
@@ -159,8 +160,7 @@ module Supercast
         path = u.path
       end
 
-      headers = request_headers(api_key, method)
-                .update(Util.normalize_headers(headers))
+      headers = request_headers(api_key, method).update(Util.normalize_headers(headers))
       params_encoder = FaradaySupercastEncoder.new
       url = api_url(path, api_base, api_version)
 
@@ -321,11 +321,7 @@ module Supercast
         raise general_api_error(http_resp[:status], http_resp[:body])
       end
 
-      error = if error_data.is_a?(String)
-                specific_oauth_error(resp, error_data, context)
-              else
-                specific_api_error(resp, error_data, context)
-              end
+      error = specific_api_error(resp, error_data, context)
 
       error.response = resp
       raise(error)
@@ -364,42 +360,6 @@ module Supercast
         RateLimitError.new(error_data[:message], opts)
       else
         APIError.new(error_data[:message], opts)
-      end
-    end
-
-    # Attempts to look at a response's error code and return an OAuth error if
-    # one matches. Will return `nil` if the code isn't recognized.
-    def specific_oauth_error(resp, error_code, context)
-      description = resp.data[:error_description] || error_code
-
-      Util.log_error('Supercast OAuth error',
-                     status: resp.http_status,
-                     error_code: error_code,
-                     error_description: description,
-                     idempotency_key: context.idempotency_key)
-
-      args = [error_code, description, {
-        http_status: resp.http_status, http_body: resp.http_body,
-        json_body: resp.data, http_headers: resp.http_headers
-      }]
-
-      case error_code
-      when 'invalid_client'
-        OAuth::InvalidClientError.new(*args)
-      when 'invalid_grant'
-        OAuth::InvalidGrantError.new(*args)
-      when 'invalid_request'
-        OAuth::InvalidRequestError.new(*args)
-      when 'invalid_scope'
-        OAuth::InvalidScopeError.new(*args)
-      when 'unsupported_grant_type'
-        OAuth::UnsupportedGrantTypeError.new(*args)
-      when 'unsupported_response_type'
-        OAuth::UnsupportedResponseTypeError.new(*args)
-      else
-        # We'd prefer that all errors are typed, but we create a generic
-        # OAuthError in case we run into a code that we don't recognize.
-        OAuth::OAuthError.new(*args)
       end
     end
 

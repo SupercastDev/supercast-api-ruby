@@ -9,67 +9,6 @@ module Supercast
     # The default :id method is deprecated and isn't useful to us
     undef :id if method_defined?(:id)
 
-    # Sets the given parameter name to one which is known to be an additive
-    # object.
-    #
-    # Additive objects are subobjects in the API that don't have the same
-    # semantics as most subobjects, which are fully replaced when they're set.
-    # This is best illustrated by example. The `source` parameter sent when
-    # updating a subscription is *not* additive; if we set it:
-    #
-    #     source[object]=card&source[number]=123
-    #
-    # We expect the old `source` object to have been overwritten completely. If
-    # the previous source had an `address_state` key associated with it and we
-    # didn't send one this time, that value of `address_state` is gone.
-    #
-    # By contrast, additive objects are those that will have new data added to
-    # them while keeping any existing data in place. The only known case of its
-    # use is for `metadata`, but it could in theory be more general. As an
-    # example, say we have a `metadata` object that looks like this on the
-    # server side:
-    #
-    #     metadata = { old: "old_value" }
-    #
-    # If we update the object with `metadata[new]=new_value`, the server side
-    # object now has *both* fields:
-    #
-    #     metadata = { old: "old_value", new: "new_value" }
-    #
-    # This is okay in itself because usually users will want to treat it as
-    # additive:
-    #
-    #     obj.metadata[:new] = "new_value"
-    #     obj.save
-    #
-    # However, in other cases, they may want to replace the entire existing
-    # contents:
-    #
-    #     obj.metadata = { new: "new_value" }
-    #     obj.save
-    #
-    # This is where things get a little bit tricky because in order to clear
-    # any old keys that may have existed, we actually have to send an explicit
-    # empty string to the server. So the operation above would have to send
-    # this form to get the intended behavior:
-    #
-    #     metadata[old]=&metadata[new]=new_value
-    #
-    # This method allows us to track which parameters are considered additive,
-    # and lets us behave correctly where appropriate when serializing
-    # parameters to be sent.
-    def self.additive_object_param(name)
-      @additive_params ||= Set.new
-      @additive_params << name
-    end
-
-    # Returns whether the given name is an additive object parameter. See
-    # `.additive_object_param` for details.
-    def self.additive_object_param?(name)
-      @additive_params ||= Set.new
-      @additive_params.include?(name)
-    end
-
     def initialize(id = nil, opts = {})
       id, @retrieve_params = Util.normalize_id(id)
       @opts = Util.normalize_opts(opts)
@@ -162,8 +101,7 @@ module Supercast
       @values.values
     end
 
-    def to_json(*_opts)
-      # TODO: pass opts to JSON.generate?
+    def to_json
       JSON.generate(@values)
     end
 
@@ -191,11 +129,10 @@ module Supercast
     end
 
     # Sets all keys within the DataObject as unsaved so that they will be
-    # included with an update when #serialize_params is called. This method is
-    # also recursive, so any DataObjects contained as values or which are
-    # values in a tenant array are also marked as dirty.
+    # included with an update when #serialize_params is called.
     def dirty!
       @unsaved_values = Set.new(@values.keys)
+
       @values.each_value do |v|
         dirty_value!(v)
       end
@@ -232,11 +169,9 @@ module Supercast
         #
         #   1. The `force` option has been set.
         #   2. We know that it was modified.
-        #   3. Its value is a DataObject. A DataObject may contain modified
-        #      values within in that its parent DataObject doesn't know about.
         #
         unsaved = @unsaved_values.include?(k)
-        next unless options[:force] || unsaved || v.is_a?(DataObject)
+        next unless options[:force] || unsaved
 
         update_hash[k.to_sym] = serialize_params_value(
           @values[k], @original_values[k], unsaved, options[:force], key: k
@@ -248,16 +183,6 @@ module Supercast
       update_hash.reject! { |_, v| v.nil? }
 
       update_hash
-    end
-
-    class << self
-      # This class method has been deprecated in favor of the instance method
-      # of the same name.
-      def serialize_params(obj, options = {})
-        obj.serialize_params(options)
-      end
-      extend Gem::Deprecate
-      deprecate :serialize_params, '#serialize_params', 2016, 9
     end
 
     # A protected field is one that doesn't get an accessor assigned to it
@@ -392,20 +317,14 @@ module Supercast
     #
     # * +:values:+ Hash used to update accessors and values.
     # * +:opts:+ Options for DataObject like an API key.
-    # * +:partial:+ Indicates that the re-initialization should not attempt to
-    #   remove accessors.
-    def initialize_from(values, opts, partial = false)
+    def initialize_from(values, opts,)
       @opts = Util.normalize_opts(opts)
 
       # the `#send` is here so that we can keep this method private
       @original_values = self.class.send(:deep_copy, values)
 
-      removed = partial ? Set.new : Set.new(@values.keys - values.keys)
+      removed = Set.new(@values.keys - values.keys)
       added = Set.new(values.keys - @values.keys)
-
-      # Wipe old state before setting new.  This is useful for e.g. updating a
-      # customer, where there is no persistent card parameter.  Mark those
-      # values which don't persist as transient
 
       remove_accessors(removed)
       add_accessors(added, values)
@@ -417,6 +336,7 @@ module Supercast
       end
 
       update_attributes(values, opts, dirty: false)
+
       values.each_key do |k|
         @transient_values.delete(k)
         @unsaved_values.delete(k)
@@ -428,40 +348,6 @@ module Supercast
     def serialize_params_value(value, original, unsaved, force, key: nil) # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
       if value.nil?
         ''
-
-      # The logic here is that essentially any object embedded in another
-      # object that had a `type` is actually an API resource of a different
-      # type that's been included in the response. These other resources must
-      # be updated from their proper endpoints, and therefore they are not
-      # included when serializing even if they've been modified.
-      #
-      # There are _some_ known exceptions though.
-      #
-      # For example, if the value is unsaved (meaning the user has set it), and
-      # it looks like the API resource is persisted with an ID, then we include
-      # the object so that parameters are serialized with a reference to its
-      # ID.
-      #
-      # Another example is that on save API calls it's sometimes desirable to
-      # update a customer's default source by setting a new card (or other)
-      # object with `#source=` and then saving the customer. The
-      # `#save_with_parent` flag to override the default behavior allows us to
-      # handle these exceptions.
-      #
-      # We throw an error if a property was set explicitly but we can't do
-      # anything with it because the integration is probably not working as the
-      # user intended it to.
-      elsif value.is_a?(Resource) && !value.save_with_parent
-        if !unsaved
-          nil
-        elsif value.respond_to?(:id) && !value.id.nil?
-          value
-        else
-          raise ArgumentError, "Cannot save property `#{key}` containing " \
-            "an API resource. It doesn't appear to be persisted and is " \
-            'not marked as `save_with_parent`.'
-        end
-
       elsif value.is_a?(Array)
         update = value.map { |v| serialize_params_value(v, nil, true, force) }
 
@@ -480,19 +366,8 @@ module Supercast
       # account.
       elsif value.is_a?(Hash)
         Util.convert_to_supercast_object(value, @opts).serialize_params
-
       elsif value.is_a?(DataObject)
-        update = value.serialize_params(force: force)
-
-        # If the entire object was replaced and this is an additive object,
-        # then we need blank each field of the old object that held a value
-        # because otherwise the update to the keys of the object will be
-        # additive instead of a full replacement. The new serialized values
-        # will override any of these empty values.
-        update = empty_values(original).merge(update) if original && unsaved && key && self.class.additive_object_param?(key)
-
-        update
-
+        value.serialize_params(force: force)
       else
         value
       end
@@ -500,7 +375,9 @@ module Supercast
 
     # Produces a deep copy of the given object including support for arrays,
     # hashes, and DataObjects.
-    private_class_method def self.deep_copy(obj)
+    private_class_method
+
+    def self.deep_copy(obj)
       case obj
       when Array
         obj.map { |e| deep_copy(e) }
@@ -529,23 +406,6 @@ module Supercast
         value.map { |v| dirty_value!(v) }
       when DataObject
         value.dirty!
-      end
-    end
-
-    # Returns a hash of empty values for all the values that are in the given
-    # DataObject.
-    def empty_values(obj)
-      values = case obj
-               when Hash then obj
-               when DataObject then obj.instance_variable_get(:@values)
-               else
-                 raise ArgumentError,
-                       '#empty_values got unexpected object type: ' \
-                       "#{obj.class.name}"
-               end
-
-      values.each_with_object({}) do |(k, _), update|
-        update[k] = ''
       end
     end
   end

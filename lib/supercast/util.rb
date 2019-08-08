@@ -43,7 +43,7 @@ module Supercast
     # Converts a hash of fields or an array of hashes into a +DataObject+ or
     # array of +DataObject+s. These new objects will be created as a concrete
     # type as dictated by their `object` field (e.g. an `object` value of
-    # `charge` would create an instance of +Charge+), but if `object` is not
+    # `creator` would create an instance of +Creator+), but if `object` is not
     # present or of an unknown type, the newly created instance will fall back
     # to being a +DataObject+.
     #
@@ -61,8 +61,7 @@ module Supercast
       when Hash
         # Try converting to a known object class. If none available, fall back
         # to generic DataObject
-        object_classes.fetch(data[:object], DataObject)
-                      .construct_from(data, opts)
+        object_classes.fetch(data[:object], DataObject).construct_from(data, opts)
       else
         data
       end
