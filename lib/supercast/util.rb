@@ -309,7 +309,7 @@ module Supercast
       # Hopefully val is a string, but protect in case it's not.
       val = val.to_s
 
-      if %r{[^\w\-/]} =~ val
+      if %r{[^\w\-/]}.match?(val)
         # If the string contains any special characters, escape any double
         # quotes it has, remove newlines, and wrap the whole thing in quotes.
         format(%("%<value>s"), value: val.gsub('"', '\"').delete("\n"))

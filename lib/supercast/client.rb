@@ -189,6 +189,7 @@ module Supercast
       begin
         resp = Response.from_faraday_response(http_resp)
       rescue JSON::ParserError
+        puts 'PARSE ERROR'
         raise general_api_error(http_resp.status, http_resp.body)
       end
 
@@ -312,28 +313,24 @@ module Supercast
     end
 
     def handle_error_response(http_resp, context)
+      puts 'ERROR RESPONSE'
       begin
         resp = Response.from_faraday_hash(http_resp)
-        error_data = resp.data[:error]
-
-        raise SupercastError, 'Indeterminate error' unless error_data
-      rescue JSON::ParserError, SupercastError
+      rescue StandardError
         raise general_api_error(http_resp[:status], http_resp[:body])
       end
 
-      error = specific_api_error(resp, error_data, context)
+      error = specific_api_error(resp, context)
 
       error.response = resp
       raise(error)
     end
 
-    def specific_api_error(resp, error_data, context)
+    def specific_api_error(resp, context)
       Util.log_error('Supercast API error',
                      status: resp.http_status,
-                     error_code: error_data[:code],
-                     error_message: error_data[:message],
-                     error_param: error_data[:param],
-                     error_type: error_data[:type],
+                     error_code: resp.http_status,
+                     error_message: resp.data[:message],
                      idempotency_key: context.idempotency_key)
 
       # The standard set of arguments that can be used to initialize most of
@@ -343,23 +340,20 @@ module Supercast
         http_headers: resp.http_headers,
         http_status: resp.http_status,
         json_body: resp.data,
-        code: error_data[:code]
+        code: resp.http_status
       }
 
       case resp.http_status
-      when 400, 404
-        InvalidRequestError.new(
-          error_data[:message], error_data[:param],
-          opts
-        )
+      when 400, 404, 422
+        InvalidRequestError.new(resp.data[:message], opts)
       when 401
-        AuthenticationError.new(error_data[:message], opts)
+        AuthenticationError.new(resp.data[:message], opts)
       when 403
-        PermissionError.new(error_data[:message], opts)
+        PermissionError.new(resp.data[:message], opts)
       when 429
-        RateLimitError.new(error_data[:message], opts)
+        RateLimitError.new(resp.data[:message], opts)
       else
-        APIError.new(error_data[:message], opts)
+        APIError.new(resp.data[:message], opts)
       end
     end
 

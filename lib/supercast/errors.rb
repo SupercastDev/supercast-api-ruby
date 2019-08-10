@@ -53,13 +53,10 @@ module Supercast
   # InvalidRequestError is raised when a request is initiated with invalid
   # parameters.
   class InvalidRequestError < SupercastError
-    attr_accessor :param
-
-    def initialize(message, param, http_status: nil, http_body: nil, json_body: nil, http_headers: nil, code: nil)
+    def initialize(message, http_status: nil, http_body: nil, json_body: nil, http_headers: nil, code: nil)
       super(message, http_status: http_status, http_body: http_body,
                      json_body: json_body, http_headers: http_headers,
                      code: code)
-      @param = param
     end
   end
 

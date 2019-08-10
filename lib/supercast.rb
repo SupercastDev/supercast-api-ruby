@@ -36,16 +36,11 @@ require_relative 'supercast/singleton'
 # Named API resources
 require_relative 'supercast/resources'
 
-# OAuth
-require_relative 'supercast/oauth'
-
 module Supercast
   DEFAULT_CA_BUNDLE_PATH ||= __dir__ + '/data/ca-certificates.crt'
 
   @api_base = 'https://supercast.com/api'
   @api_version = 'v1'
-
-  @oauth_base = 'https://supercast.com'
 
   @log_level = nil
   @logger = nil
@@ -64,7 +59,7 @@ module Supercast
   @read_timeout = 80
 
   class << self
-    attr_accessor :api_key, :api_base, :verify_ssl_certs, :oauth_base,
+    attr_accessor :api_key, :api_base, :verify_ssl_certs,
                   :api_version, :open_timeout, :read_timeout, :proxy
 
     attr_reader :max_network_retry_delay, :initial_network_retry_delay
