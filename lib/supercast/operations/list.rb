@@ -14,7 +14,12 @@ module Supercast
         opts = Util.normalize_opts(opts)
 
         resp, opts = request(:get, resource_url, filters, opts)
-        obj = DataList.construct_from({ data: resp.data }, opts)
+        obj = DataList.construct_from({
+                                        data: resp.data,
+                                        page: resp.http_headers['x-page'].to_i,
+                                        per_page: resp.http_headers['x-per-page'].to_i,
+                                        total: resp.http_headers['x-total'].to_i
+                                      }, opts)
 
         # set filters so that we can fetch the same limit, expansions, and
         # predicates when accessing the next and previous pages

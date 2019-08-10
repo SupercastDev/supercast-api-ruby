@@ -189,7 +189,6 @@ module Supercast
       begin
         resp = Response.from_faraday_response(http_resp)
       rescue JSON::ParserError
-        puts 'PARSE ERROR'
         raise general_api_error(http_resp.status, http_resp.body)
       end
 
@@ -313,7 +312,6 @@ module Supercast
     end
 
     def handle_error_response(http_resp, context)
-      puts 'ERROR RESPONSE'
       begin
         resp = Response.from_faraday_hash(http_resp)
       rescue StandardError

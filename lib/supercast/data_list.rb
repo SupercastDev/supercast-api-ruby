@@ -58,6 +58,7 @@ module Supercast
       return enum_for(:auto_paging_each) unless block_given?
 
       page = self
+
       loop do
         page.each(&blk)
         page = page.next_page
@@ -82,11 +83,9 @@ module Supercast
     # This method will try to respect the limit of the current page. If none
     # was given, the default limit will be fetched again.
     def next_page(params = {}, opts = {})
-      return self.class.empty_list(opts) unless has_more
+      return self.class.empty_list(opts) unless defined?(page) && defined?(per_page) && defined?(total) && page * per_page < total
 
-      last_id = data.last.id
-
-      params = filters.merge(starting_after: last_id).merge(params)
+      params = filters.merge(page: page + 1).merge(params)
 
       list(params, opts)
     end
@@ -96,9 +95,9 @@ module Supercast
     # This method will try to respect the limit of the current page. If none
     # was given, the default limit will be fetched again.
     def previous_page(params = {}, opts = {})
-      first_id = data.first.id
+      return self.class.empty_list(opts) unless page && page > 1
 
-      params = filters.merge(ending_before: first_id).merge(params)
+      params = filters.merge(page: page - 1).merge(params)
 
       list(params, opts)
     end
