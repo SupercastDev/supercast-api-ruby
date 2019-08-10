@@ -26,4 +26,5 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency 'rspec', '~> 3.8'
   gem.add_development_dependency 'shoulda-matchers', '3.1.2'
+  gem.add_development_dependency 'simplecov', '0.16.1'
 end
