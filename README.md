@@ -1,5 +1,8 @@
 # Supercast Ruby Library
 
+[![Maintainability](https://api.codeclimate.com/v1/badges/6397744dd3eebf6205f6/maintainability)](https://codeclimate.com/github/company-z/supercast-api-ruby/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/6397744dd3eebf6205f6/test_coverage)](https://codeclimate.com/github/company-z/supercast-api-ruby/test_coverage)
+
 The Supercast Ruby library provides convenient access to the Supercast API from
 applications written in the Ruby language. It includes a pre-defined set of
 classes for API resources that initialize themselves dynamically from API
