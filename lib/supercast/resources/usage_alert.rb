@@ -4,7 +4,7 @@ module Supercast
   class UsageAlert < Resource
     extend Supercast::Operations::List
 
-    OBJECT_NAME = 'usage_alert'
+    OBJECT_NAME = 'usage_alert'.freeze
 
     custom_method :dismiss, http_verb: :patch
     custom_method :ignore, http_verb: :patch

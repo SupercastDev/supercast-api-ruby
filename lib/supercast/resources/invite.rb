@@ -5,6 +5,6 @@ module Supercast
     include Supercast::Operations::Destroy
     extend Supercast::Operations::List
 
-    OBJECT_NAME = 'invite'
+    OBJECT_NAME = 'invite'.freeze
   end
 end

@@ -7,7 +7,7 @@ module Supercast
     include Supercast::Operations::Request
     include Supercast::Operations::Create
 
-    OBJECT_NAME = 'list'
+    OBJECT_NAME = 'list'.freeze
 
     # This accessor allows a `DataList` to inherit various filters that were
     # given to a predecessor. This allows for things like consistent limits,

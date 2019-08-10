@@ -7,7 +7,7 @@ require 'irb/completion'
 
 require "#{::File.dirname(__FILE__)}/../lib/supercast"
 
-def reload!()
+def reload!
   puts 'Reloading ...'
 
   load("#{File.expand_path('..', __dir__)}/lib/supercast.rb")

@@ -101,7 +101,7 @@ module Supercast
       @values.values
     end
 
-    def to_json
+    def to_json(_opts)
       JSON.generate(@values)
     end
 
@@ -163,7 +163,7 @@ module Supercast
     def serialize_params(options = {})
       update_hash = {}
 
-      @values.each do |k, v|
+      @values.each do |k, _v|
         # There are a few reasons that we may want to add in a parameter for
         # update:
         #
@@ -317,7 +317,7 @@ module Supercast
     #
     # * +:values:+ Hash used to update accessors and values.
     # * +:opts:+ Options for DataObject like an API key.
-    def initialize_from(values, opts,)
+    def initialize_from(values, opts)
       @opts = Util.normalize_opts(opts)
 
       # the `#send` is here so that we can keep this method private
@@ -345,7 +345,7 @@ module Supercast
       self
     end
 
-    def serialize_params_value(value, original, unsaved, force, key: nil) # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
+    def serialize_params_value(value, original, _unsaved, force)
       if value.nil?
         ''
       elsif value.is_a?(Array)
@@ -375,9 +375,7 @@ module Supercast
 
     # Produces a deep copy of the given object including support for arrays,
     # hashes, and DataObjects.
-    private_class_method
-
-    def self.deep_copy(obj)
+    private_class_method def self.deep_copy(obj)
       case obj
       when Array
         obj.map { |e| deep_copy(e) }

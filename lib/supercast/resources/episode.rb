@@ -7,6 +7,6 @@ module Supercast
     extend Supercast::Operations::List
     include Supercast::Operations::Save
 
-    OBJECT_NAME = 'episode'
+    OBJECT_NAME = 'episode'.freeze
   end
 end

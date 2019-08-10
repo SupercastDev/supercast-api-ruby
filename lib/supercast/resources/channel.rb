@@ -4,6 +4,6 @@ module Supercast
   class Channel < Singleton
     include Supercast::Operations::Save
 
-    OBJECT_NAME = 'channel'
+    OBJECT_NAME = 'channel'.freeze
   end
 end
