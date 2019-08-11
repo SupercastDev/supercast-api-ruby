@@ -66,10 +66,10 @@ Supercast.api_key = "123abc..."
 Supercast::Subscriber.list()
 
 # retrieve single episode
-Supercast::Episode.retrieve(
-  '1',
-)
+Supercast::Episode.retrieve(1)
 ```
+
+For more information on usage, check out the [offical documentation](https://docs.supercast.tech/docs/ruby).
 
 ### Configuring a Client
 
@@ -81,9 +81,7 @@ library use any client supported by [Faraday][faraday] by initializing a
 conn = Faraday.new
 client = Supercast::Client.new(conn)
 episode, resp = client.request do
-  Supercast::Episode.retrieve(
-    "1",
-  )
+  Supercast::Episode.retrieve(1)
 end
 puts resp.data
 ```
