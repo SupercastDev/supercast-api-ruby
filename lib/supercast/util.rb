@@ -68,27 +68,15 @@ module Supercast
     end
 
     def self.log_error(message, data = {})
-      if !Supercast.logger.nil? ||
-         !Supercast.log_level.nil? && Supercast.log_level <= Supercast::LEVEL_ERROR
-        log_internal(message, data, color: :cyan, level: Supercast::LEVEL_ERROR,
-                                    logger: Supercast.logger, out: $stderr)
-      end
+      log_at_level(Supercast::LEVEL_ERROR, message, data, color: :cyan)
     end
 
     def self.log_info(message, data = {})
-      if !Supercast.logger.nil? ||
-         !Supercast.log_level.nil? && Supercast.log_level <= Supercast::LEVEL_INFO
-        log_internal(message, data, color: :cyan, level: Supercast::LEVEL_INFO,
-                                    logger: Supercast.logger, out: $stdout)
-      end
+      log_at_level(Supercast::LEVEL_INFO, message, data, color: :cyan)
     end
 
     def self.log_debug(message, data = {})
-      if !Supercast.logger.nil? ||
-         !Supercast.log_level.nil? && Supercast.log_level <= Supercast::LEVEL_DEBUG
-        log_internal(message, data, color: :blue, level: Supercast::LEVEL_DEBUG,
-                                    logger: Supercast.logger, out: $stdout)
-      end
+      log_at_level(Supercast::LEVEL_DEBUG, message, data, color: :blue)
     end
 
     def self.symbolize_names(object)
@@ -266,6 +254,11 @@ module Supercast
       end
     end
     private_class_method :level_name
+
+    def self.log_at_level(level, message, data = {}, opts = {})
+      log_internal(message, data, { level: level, logger: Supercast.logger, out: $stdout }.merge(opts)) if !Supercast.logger.nil? || !Supercast.log_level.nil? && Supercast.log_level <= level
+    end
+    private_class_method :log_at_level
 
     # TODO: Make these named required arguments when we drop support for Ruby
     # 2.0.

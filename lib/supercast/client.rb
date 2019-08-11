@@ -81,11 +81,6 @@ module Supercast
       # saturated server, so retry in case it's intermittent.
       return true if error.is_a?(Faraday::ConnectionFailed)
 
-      if error.is_a?(Faraday::ClientError) && error.response
-        # 409 conflict
-        return true if error.response[:status] == 409
-      end
-
       false
     end
 
