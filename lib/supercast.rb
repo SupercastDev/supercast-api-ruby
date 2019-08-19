@@ -39,7 +39,7 @@ require_relative 'supercast/resources'
 module Supercast
   DEFAULT_CA_BUNDLE_PATH ||= __dir__ + '/data/ca-certificates.crt'
 
-  @api_base = 'https://supercast.com/api'
+  @api_base = 'https://supercast.tech/api'
   @api_version = 'v1'
 
   @log_level = nil
