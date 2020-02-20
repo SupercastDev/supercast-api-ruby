@@ -15,6 +15,7 @@ RSpec.describe Supercast::DataTypes do
       expect(list['role']).to eq(Supercast::Role)
       expect(list['subscriber']).to eq(Supercast::Subscriber)
       expect(list['usage_alert']).to eq(Supercast::UsageAlert)
+      expect(list['feed']).to eq(Supercast::Feeds)
     end
   end
 end

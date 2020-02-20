@@ -14,7 +14,8 @@ module Supercast
         Invite::OBJECT_NAME => Invite,
         Role::OBJECT_NAME => Role,
         Subscriber::OBJECT_NAME => Subscriber,
-        UsageAlert::OBJECT_NAME => UsageAlert
+        UsageAlert::OBJECT_NAME => UsageAlert,
+        Feeds::OBJECT_NAME => Feeds
       }
     end
   end
