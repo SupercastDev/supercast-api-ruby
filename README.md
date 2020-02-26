@@ -69,7 +69,51 @@ Supercast::Subscriber.list()
 Supercast::Episode.retrieve(1)
 ```
 
-For more information on usage, check out the [offical documentation](https://docs.supercast.tech/docs/ruby).
+Here are the methods available to use:
+
+#### `Supercast::Channel`
+
+- `Supercast::Channel.save(id, params)` Updates a Channel by ID.
+
+#### `Supercast::Creator`
+
+- `Supercast::Creator.list()` Lists all the Creators on the authenticated Channel.
+- `Supercast::Creator.save(id, params)` Updates a Creator by UUID or Email.
+- `Supercast::Creator.destroy(id)` Destroys a Creator by UUID or Email.
+
+#### `Supercast::Episode`
+
+- `Supercast::Episode.list()` Lists all the Episodes on the authenticated Channel.
+- `Supercast::Episode.create(params)` Create a new Episode on the authenticated Channel.
+- `Supercast::Episode.save(id, params)` Updates an Episode by ID.
+- `Supercast::Episode.destroy(id)` Destroys an Episode by ID.
+
+#### `Supercast::Feeds`
+
+- `Supercast::Feeds.activate(id)` Activate a the feeds of a subscriber by UUID or Email.
+- `Supercast::Feeds.suspend(id)` Activate a the feeds of a subscriber by UUID or Email.
+- `Supercast::Feeds.deactivate(id)` Activate a the feeds of a subscriber by UUID or Email.
+
+#### `Supercast::Role`
+
+- `Supercast::Role.list()` Lists all the Roles on the authenticated Channel.
+- `Supercast::Role.create(params)` Create a new Role on the authenticated Channel.
+- `Supercast::Role.save(id, params)` Updates a Role by ID.
+- `Supercast::Role.destroy(id)` Destroys a Role by ID.
+
+#### `Supercast::Subscriber`
+
+- `Supercast::Subscriber.list()` Lists all the Subscribers on the authenticated Channel.
+- `Supercast::Subscriber.create(params)` Create a new Subscriber on the authenticated Channel.
+- `Supercast::Subscriber.save(id, params)` Updates a Subscriber by UUID or Email.
+- `Supercast::Subscriber.destroy(id)` Destroys a Subscriber by UUID or Email.
+
+#### `Supercast::UsageAlert`
+
+- `Supercast::UsageAlert.list()` Lists all the Subscribers on the authenticated Channel.
+- `Supercast::UsageAlert.dismiss(params)` Dismiss the Usage Alert.
+- `Supercast::UsageAlert.ignore(params)` Ignore further Usage Alerts from this user.
+- `Supercast::UsageAlert.suspend(params)` Suspend the user associated with the Usage Alert.
 
 ### Configuring a Client
 
