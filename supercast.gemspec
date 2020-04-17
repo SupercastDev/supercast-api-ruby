@@ -21,7 +21,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = Dir['{spec}/**/*.rb']
   gem.require_paths = ['lib']
 
-  gem.add_dependency('faraday', '~> 0.13')
+  gem.add_dependency('faraday', '~> 1.0')
   gem.add_dependency('net-http-persistent', '~> 3.0')
 
   gem.add_development_dependency 'rspec', '~> 3.8'
