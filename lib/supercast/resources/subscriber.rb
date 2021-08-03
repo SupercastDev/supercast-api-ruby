@@ -6,6 +6,7 @@ module Supercast
     include Supercast::Operations::Destroy
     extend Supercast::Operations::List
     include Supercast::Operations::Save
+    extend Supercast::Operations::Find
 
     OBJECT_NAME = 'subscriber'
   end
