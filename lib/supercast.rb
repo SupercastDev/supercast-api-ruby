@@ -22,6 +22,7 @@ require_relative 'supercast/operations/list'
 require_relative 'supercast/operations/request'
 require_relative 'supercast/operations/save'
 require_relative 'supercast/operations/feeds'
+require_relative 'supercast/operations/find'
 
 # API resource support classes
 require_relative 'supercast/errors'

@@ -11,7 +11,7 @@ module Supercast
         # * +id+ - ID of the resource to activate the feeds for.
         # * +opts+ - A Hash of additional options to be added to the request.
         def activate(id, opts = {})
-          params = { feed_token: { state: 'active' } }
+          params = { feed_token: { state: 'available' } }
           request(:patch, "#{resource_url}/#{id}", params, opts)
           true
         end
@@ -47,7 +47,7 @@ module Supercast
       #
       # * +opts+ - A Hash of additional options to be added to the request.
       def activate(opts = {})
-        params = { feed_token: { state: 'active' } }
+        params = { feed_token: { state: 'available' } }
         request(:patch, resource_url, params, opts)
         true
       end
